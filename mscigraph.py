@@ -1,3 +1,4 @@
+import os
 import socket
 import datetime
 import threading
@@ -7,6 +8,7 @@ matplotlib.use("Agg")
 import matplotlib.backends.backend_agg as agg
 import ssl
 from time import sleep
+import pandas as pd
 
 import pygame
 
@@ -17,6 +19,13 @@ Adam Furman
 You need to have
 "pip install matplotlib pygame" to use this on python3
 """
+
+# output filepath for csv file
+curdir = os.getcwd()
+output_path = curdir+'\\output\\'
+
+if not os.path.exists(output_path):
+    os.mkdir(output_path)
 
 class IRCClient(object):
     def __init__(self, server: str, port: int, uname: str, pwd: str, channel: str):
@@ -125,7 +134,7 @@ class DataCollector(object):
                     self.process(content)
                 except:
                     print("[W] Failed to process: {}".format(resp))
-                
+
         print("[I] Monitor quit.")
 
 
@@ -154,7 +163,7 @@ class Visualizer(object):
                 pygame.quit()
                 return False
         return True
-    
+
     def generate(self, render=False):
         for i, ax in enumerate(self.axs):
             var = self.coll.variables[i]
@@ -178,6 +187,13 @@ class Visualizer(object):
         while self.render():
             self.generate()
             sleep(self.interval)
+        data_list = [(k, v[0][i], v[1][i]) for k,v in self.coll.data.items() for i in range(len(v[0]))]
+        outputFile = pd.DataFrame(data_list, columns=['Identifier', 'Time', 'Val'])
+        outputFile = outputFile.pivot_table(values='Val', columns='Identifier', index='Time')
+        file_name = 'flight_data_'
+        outputFile.to_csv(output_path+file_name+str(len(os.listdir(output_path))))
+
+
 
 if __name__ == "__main__":
     client = IRCClient(

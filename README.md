@@ -27,3 +27,5 @@ coll = DataCollector(
 ```
 
 The names are not case-sensitive.
+
+Saves flight data as csv file in SARP-DataVisBot\output.
